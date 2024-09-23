@@ -1,8 +1,9 @@
 package main
 
 import (
+	"cache-proxy/proxy"
 	"flag"
-	"fmt"
+	"log"
 )
 
 func main() {
@@ -13,6 +14,8 @@ func main() {
 		panic("origin must containe url address")
 	}
 
-	fmt.Println(*origin)
+	if err := proxy.HttpCall(*origin); err != nil {
+		log.Fatal(err.Error())
+	}
 
 }
