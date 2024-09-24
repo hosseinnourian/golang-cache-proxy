@@ -41,3 +41,11 @@ func (r *RedisCache) Set(ctx context.Context, key string, value string, expirati
 	}
 	return nil
 }
+func (r *RedisCache) FlushCache(ctx context.Context) error {
+	err := r.Client.FlushAll(ctx).Err()
+	if err != nil {
+		return fmt.Errorf("error flushing Redis cache: %v", err)
+	}
+	fmt.Println("Cache cleared successfully!")
+	return nil
+}

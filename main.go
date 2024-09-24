@@ -3,6 +3,7 @@ package main
 import (
 	"cache-proxy/cache"
 	"cache-proxy/proxy"
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -10,7 +11,21 @@ import (
 
 func main() {
 	origin := flag.String("origin", "", "URL to fetch")
+	clearCache := flag.Bool("clear-cache", false, "Clear all cache")
 	flag.Parse()
+
+
+	redisClient := cache.NewRedisClient()
+	redisCache := cache.NewRedisCache(redisClient)
+
+
+	if *clearCache {
+		err := redisCache.FlushCache(context.TODO())
+		if err != nil {
+			log.Fatalf("Failed to clear cache: %v", err)
+		}
+		return
+	}
 
 	// Ensure the URL is provided
 	if *origin == "" {
@@ -18,8 +33,7 @@ func main() {
 	}
 
 	// Initialize Redis client and cache
-	redisClient := cache.NewRedisClient()
-	redisCache := cache.NewRedisCache(redisClient)
+
 
 	// Initialize the proxy with the Redis cache
 	cacheProxy := proxy.NewCacheProxy(redisCache)
