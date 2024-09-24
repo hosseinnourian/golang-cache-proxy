@@ -37,20 +37,17 @@ You can run the proxy from the command line, specifying different flags dependin
 
 1. Fetch URL and Cache Response
 Fetches the response for a given URL and caches it in Redis. Subsequent requests to the same URL will be served from the cache.
-
 go run main.go --origin="http://example.com"
 
 2. Fresh Mode (Bypass Cache)
 Forces a fresh HTTP request, bypassing the cache entirely. The response will still be cached for future use.
-
-
 go run main.go --origin="http://example.com" --fresh
+
 3. Clear Entire Cache
 Clears all cached data stored in Redis.
-
-
 go run main.go --clear-cache
-CLI Flags
+
+## CLI Flags
 --origin: (Required) The URL you want to fetch.
 --clear-cache: Clears all cached data in Redis.
 --fresh: Forces a fresh HTTP request, bypassing the cache.
