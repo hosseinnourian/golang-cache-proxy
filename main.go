@@ -12,12 +12,12 @@ import (
 func main() {
 	origin := flag.String("origin", "", "URL to fetch")
 	clearCache := flag.Bool("clear-cache", false, "Clear all cache")
-	flag.Parse()
+	fresh := flag.Bool("fresh", false, "Fresh HTTP Request (bypass cache)")
 
+	flag.Parse()
 
 	redisClient := cache.NewRedisClient()
 	redisCache := cache.NewRedisCache(redisClient)
-
 
 	if *clearCache {
 		err := redisCache.FlushCache(context.TODO())
@@ -34,12 +34,12 @@ func main() {
 
 	// Initialize Redis client and cache
 
-
 	// Initialize the proxy with the Redis cache
 	cacheProxy := proxy.NewCacheProxy(redisCache)
 
 	// Make the HTTP call (either cached or fetched from origin)
-	response, err := cacheProxy.HttpCall(*origin)
+
+	response, err := cacheProxy.HttpCall(*origin , *fresh)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}

@@ -17,21 +17,32 @@ func NewCacheProxy(redisCache *cache.RedisCache) *CacheProxy {
 	return &CacheProxy{Cache: redisCache}
 }
 
-func (p *CacheProxy) HttpCall(origin string) (string, error) {
-
+func (p *CacheProxy) HttpCall(origin string, fresh bool) (string, error) {
 	ctx := context.Background()
 
-	value, err := p.Cache.Get(ctx, origin)
-	if err == nil {
-		fmt.Println("Read from cache...")
-		return value, nil
-	}
-	if err != nil && err.Error() != fmt.Sprintf("cache miss for key: %s", origin) {
-		fmt.Println("Redis error:", err)
+
+	if !fresh {
+		value, err := p.Cache.Get(ctx, origin)
+		if err == nil {
+			fmt.Println("Read from cache...")
+			return value, nil
+		}
+
+		// Log any Redis errors
+		if err.Error() != fmt.Sprintf("cache miss for key: %s", origin) {
+			fmt.Println("Redis error:", err)
+		} else {
+			fmt.Println("Cache miss. Fetching from origin...")
+		}
+	} else {
+		fmt.Println("Fresh mode enabled. Bypassing cache...")
 	}
 
-	fmt.Println("Cache miss. Fetching from origin...")
+	// Make the HTTP request (shared by both freshCopy and cache miss cases)
+	return p.fetchAndCacheResponse(ctx, origin)
 
+}
+func (p *CacheProxy) fetchAndCacheResponse(ctx context.Context, origin string) (string, error) {
 	response, err := http.Get(origin)
 	if err != nil {
 		return "", fmt.Errorf("error fetching origin %s: %v", origin, err)
@@ -45,7 +56,7 @@ func (p *CacheProxy) HttpCall(origin string) (string, error) {
 	}
 	stringResponse := string(byteBody)
 
-	// Cache the response with an expiration of 5 minutes
+	// Cache the response with an expiration of 60 minutes
 	expiration := 60 * time.Minute
 	err = p.Cache.Set(ctx, origin, stringResponse, expiration)
 	if err != nil {
@@ -53,5 +64,4 @@ func (p *CacheProxy) HttpCall(origin string) (string, error) {
 	}
 
 	return stringResponse, nil
-
 }
